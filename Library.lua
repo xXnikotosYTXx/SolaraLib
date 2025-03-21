@@ -74,7 +74,9 @@ function Library:SafeCallback(f, ...)
         return;
     end;
 
-
+    if not Library.NotifyOnError then
+        return f(...);
+    end;
 
     local success, event = pcall(f, ...);
 
@@ -2498,7 +2500,8 @@ end;
             Dropdown:BuildDropdownList();
 
             Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
-            Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
+            Library:
+(Dropdown.Changed, Dropdown.Value);
         end;
 
         DropdownOuter.InputBegan:Connect(function(Input)
