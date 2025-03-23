@@ -657,12 +657,11 @@ do -- // Visuals
                                         SetRenderProperty(Renders.BoxOutline, "Transparency", BoxTransparency1)
                                         -- Fill
                                         -- Fill (двойная проверка)
-                                        local BoxFillVisible = ESP.Main.Box.BoxFillEnabled -- Добавляем проверку
                                         SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
                                         SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
-                                        SetRenderProperty(Renders.BoxFill, "Visible", BoxFillVisible) -- Используем флаг
+                                        SetRenderProperty(Renders.BoxFill, "Visible", true)
                                         SetRenderProperty(Renders.BoxFill, "Color", BoxColor2)
-                                        SetRenderProperty(Renders.BoxFill, "Transparency", Transparency2)
+                                        SetRenderProperty(Renders.BoxFill, "Transparency", BoxTransparency2)
                                     else
                                         SetRenderProperty(Renders.BoxInline, "Visible", false)
                                         SetRenderProperty(Renders.BoxOutline, "Visible", false)
