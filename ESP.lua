@@ -815,7 +815,6 @@ do -- // Visuals
             return Self:Remove()
         end
     end
-end
 --
 do -- // Connections
     Utility:Connection(RunService.RenderStepped, function()
