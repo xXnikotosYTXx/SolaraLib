@@ -5,7 +5,8 @@ local Esp = {
         MaxDistance = 9e9,
         CheckTeam = false,
         UseTeamColor = false,
-        TeamColor = Color3.fromRGB(255, 255, 255),
+        
+        TeamColor = Color3.fromRGB(255, 255, 255), -- Added TeamColor setting
         ShowDistance = true,
         Box = true,
         BoxColor = Color3.fromRGB(255, 255, 255),
@@ -17,7 +18,8 @@ local Esp = {
         HealthText = true,
         HealthTextColor = Color3.fromRGB(0, 255, 0),
         TextFont = 3,
-        TextSize = 13
+        TextSize = 13,
+        -- ... остальные настройки ...
     },
     Groups = {},
     Cache = {}
@@ -25,42 +27,9 @@ local Esp = {
 
 Esp.__index = Esp
 
--- Оригинальные методы без изменений
-function Esp.New(Player)
-    local self = setmetatable({
-        Player = Player,
-        Drawings = {},
-        Misc = "",
-        Connection = nil
-    }, Esp)
-
-    self:Construct()
-    self:Render()
-
-    self.Index = #Esp.Cache + 1
-    Esp.Cache[self.Index] = self
-
-    return self
-end
-
-function Esp:_Create(Type, Properties)
-    local drawing = Drawing.new(Type)
-    for Property, Value in next, Properties do
-        drawing[Property] = Value
-    end
-    return drawing
-end
-
-function Esp:Remove()
-    for _, drawing in next, self.Drawings do
-        drawing:Remove()
-    end
-    table.remove(Esp.Cache, self.Index)
-    self.Connection:Disconnect()
-end
-
+-- В конструкторе объектов исправляем обращение к настройкам:
 function Esp:Construct()
-   self.Drawings.Box = self:_Create("Square", {
+    self.Drawings.Box = self:_Create("Square", {
         Visible = false,
         Filled = false,
         Thickness = 1,
@@ -96,8 +65,8 @@ function Esp:Construct()
         Visible = false,
         Outline = true,
         Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
+        Size = self.Settings.TextSize,
+        Font = self.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
@@ -107,8 +76,8 @@ function Esp:Construct()
         Outline = true,
         Text = "Empty",
         Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
+        Size = self.Settings.TextSize,
+        Font = self.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
@@ -119,7 +88,7 @@ function Esp:Construct()
         Text = "",
         Color = Color3.new(1, 1, 1),
         Size = 10,
-        Font = Esp.Settings.TextFont,
+        Font = self.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
@@ -144,14 +113,14 @@ function Esp:Render()
 
             local Distance = math.round((CurrentCamera.CFrame.Position - HumanoidRootPart.Position).Magnitude)
 
-            local Visible = Esp.Settings.Enabled and RootVisible and HeadVisible and LegVisible
+            local Visible = self.Settings.Enabled and RootVisible and HeadVisible and LegVisible
 
-            if Esp.Settings.CheckTeam then
+            if self.Settings.CheckTeam then
                 Visible = Visible and (self.Player.Team ~= game.Players.LocalPlayer.Team)
             end
 
-            if Esp.Settings.LimitDistance then
-                Visible = Visible and (Distance <= Esp.Settings.MaxDistance)
+            if self.Settings.LimitDistance then
+                Visible = Visible and (Distance <= self.Settings.MaxDistance)
             end
 
             local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
@@ -159,7 +128,7 @@ function Esp:Render()
             if Visible then
                 self.Drawings.Box.Size = Vector2.new(Width, Height)
                 self.Drawings.Box.Position = Vector2.new(RootVector.X - (Width / 2), RootVector.Y - (Height / 2))
-                self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor -- Use TeamColor if enabled
+                self.Drawings.Box.Color = self.Settings.UseTeamColor and self.Settings.TeamColor or self.Settings.BoxColor -- Use TeamColor if enabled
 
                 self.Drawings.BoxOutline.Size = Vector2.new(Width - 2, Height - 2)
                 self.Drawings.BoxOutline.Position = Vector2.new((RootVector.X - (Width / 2)) + 1, (RootVector.Y - (Height / 2)) + 1)
@@ -171,31 +140,31 @@ function Esp:Render()
                 self.Drawings.HealthBar.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 7, self.Drawings.Box.Position.Y)
                 self.Drawings.HealthBar.Color = Color3.new(1 - HealthDecimal, HealthDecimal, 0)
 
-                self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (Esp.Settings.TextSize + 5))
-                self.Drawings.Name.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.NameColor
-                self.Drawings.Name.Text = (Esp.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
-                self.Drawings.Name.Font = Esp.Settings.TextFont
-                self.Drawings.Name.Size = Esp.Settings.TextSize
+                self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (self.Settings.TextSize + 5))
+                self.Drawings.Name.Color = self.Settings.UseTeamColor and self.Settings.TeamColor or self.Settings.NameColor
+                self.Drawings.Name.Text = (self.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
+                self.Drawings.Name.Font = self.Settings.TextFont
+                self.Drawings.Name.Size = self.Settings.TextSize
 
                 self.Drawings.Misc.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), self.Drawings.Box.Position.Y + 2)
-                self.Drawings.Misc.Color = Esp.Settings.MiscColor
-                self.Drawings.Misc.Font = Esp.Settings.TextFont
-                self.Drawings.Misc.Size = Esp.Settings.TextSize
+                self.Drawings.Misc.Color = self.Settings.MiscColor
+                self.Drawings.Misc.Font = self.Settings.TextFont
+                self.Drawings.Misc.Size = self..Settings.TextSize
                 self.Drawings.Misc.Text = self.Misc
 
                 self.Drawings.HealthText.Position = self.Drawings.HealthBarBackground.Position + Vector2.new(-15, self.Drawings.HealthBarBackground.Size.Y - (self.Drawings.HealthBarBackground.Size.Y - self.Drawings.HealthBar.Size.Y) - 5)
-                self.Drawings.HealthText.Color = Esp.Settings.HealthTextColor
-                self.Drawings.HealthText.Font = Esp.Settings.TextFont
+                self.Drawings.HealthText.Color = self..Settings.HealthTextColor
+                self.Drawings.HealthText.Font = self.Settings.TextFont
                 self.Drawings.HealthText.Text = math.round(HealthDecimal * 100) .. "%"
             end
 
-            self.Drawings.Box.Visible = Visible and Esp.Settings.Box
-            self.Drawings.BoxOutline.Visible = Visible and Esp.Settings.Box
-            self.Drawings.HealthBarBackground.Visible = Visible and Esp.Settings.HealthBar
-            self.Drawings.HealthBar.Visible = Visible and Esp.Settings.HealthBar
-            self.Drawings.Name.Visible = Visible and Esp.Settings.Name
-            self.Drawings.Misc.Visible = Visible and Esp.Settings.Misc
-            self.Drawings.HealthText.Visible = Visible and Esp.Settings.HealthText and HealthDecimal ~= 1
+            self.Drawings.Box.Visible = Visible and self.Settings.Box
+            self.Drawings.BoxOutline.Visible = Visible and self.Settings.Box
+            self.Drawings.HealthBarBackground.Visible = Visible and self.Settings.HealthBar
+            self.Drawings.HealthBar.Visible = Visible and self.Settings.HealthBar
+            self.Drawings.Name.Visible = Visible and self.Settings.Name
+            self.Drawings.Misc.Visible = Visible and self.Settings.Misc
+            self.Drawings.HealthText.Visible = Visible and self.Settings.HealthText and HealthDecimal ~= 1
         else
             self.Drawings.Box.Visible = false
             self.Drawings.BoxOutline.Visible = false
@@ -207,31 +176,3 @@ function Esp:Render()
         end
     end)
 end
-
--- Автоматическая инициализация для игроков
-local Players = game:GetService("Players")
-
-local function PlayerAdded(player)
-    if player ~= Players.LocalPlayer then
-        Esp.New(player)
-    end
-end
-
-local function PlayerRemoving(player)
-    for i, esp in ipairs(Esp.Cache) do
-        if esp.Player == player then
-            esp:Remove()
-            break
-        end
-    end
-end
-
-Players.PlayerAdded:Connect(PlayerAdded)
-Players.PlayerRemoving:Connect(PlayerRemoving)
-
--- Инициализация существующих игроков
-for _, player in ipairs(Players:GetPlayers()) do
-    PlayerAdded(player)
-end
-
-return Esp
