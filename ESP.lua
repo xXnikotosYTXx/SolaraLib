@@ -1,4 +1,4 @@
-local Esp = {
+local ESP = {
     Settings = {
         Enabled = false,
         LimitDistance = false,
@@ -22,59 +22,65 @@ local Esp = {
     Cache = {}
 }
 
-Esp.__index = Esp
+ESP.__index = ESP
 
-function Esp.New(Player)
+function ESP.New(Player)
     local self = setmetatable({
         Player = Player,
         Drawings = {},
         Misc = "",
         Connection = nil
-    }, Esp)
+    }, ESP)
 
     self:Construct()
     self:Render()
-    table.insert(Esp.Cache, self)
-
+    table.insert(ESP.Cache, self)
     return self
 end
 
-function Esp:_Create(Type, Properties)
+function ESP:_Create(Type, Properties)
     local drawing = Drawing.new(Type)
-    for Property, Value in next, Properties do
+    for Property, Value in pairs(Properties) do
         drawing[Property] = Value
     end
     return drawing
 end
 
-function Esp:Construct()
-    self.Drawings.Box = self:_Create("Square", { Visible = false, Thickness = 1, Color = Color3.new(1, 1, 1) })
-    self.Drawings.HealthBar = self:_Create("Square", { Visible = false, Thickness = 1, Color = Color3.new(0, 1, 0) })
-    self.Drawings.Name = self:_Create("Text", { Visible = false, Outline = true, Color = Color3.new(1, 1, 1) })
+function ESP:Remove()
+    for _, drawing in pairs(self.Drawings) do
+        drawing:Remove()
+    end
+    table.remove(ESP.Cache, table.find(ESP.Cache, self))
+    if self.Connection then self.Connection:Disconnect() end
 end
 
-function Esp:Render()
+function ESP:Construct()
+    self.Drawings.Box = self:_Create("Square", {Visible = false, Thickness = 1, Color = ESP.Settings.BoxColor})
+    self.Drawings.BoxOutline = self:_Create("Square", {Visible = false, Thickness = 1, Color = Color3.new(0, 0, 0)})
+    self.Drawings.HealthBar = self:_Create("Square", {Visible = false, Filled = true, Color = Color3.new(0, 1, 0)})
+    self.Drawings.Name = self:_Create("Text", {Visible = false, Color = ESP.Settings.NameColor, Size = ESP.Settings.TextSize, Font = ESP.Settings.TextFont, Center = true})
+    self.Drawings.HealthText = self:_Create("Text", {Visible = false, Color = ESP.Settings.HealthTextColor, Size = 10, Font = ESP.Settings.TextFont, Center = true})
+end
+
+function ESP:Render()
     self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
-        if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") then
-            local CurrentCamera = workspace.CurrentCamera
-            local RootVector, Visible = CurrentCamera:WorldToViewportPoint(self.Player.Character.HumanoidRootPart.Position)
-
-            if Esp.Settings.Enabled and Visible then
-                self.Drawings.Box.Position = Vector2.new(RootVector.X - 50, RootVector.Y - 50)
-                self.Drawings.Box.Size = Vector2.new(100, 100)
-                self.Drawings.Box.Visible = Esp.Settings.Box
-                self.Drawings.Box.Color = Esp.Settings.BoxColor
-
-                self.Drawings.Name.Position = Vector2.new(RootVector.X, RootVector.Y - 60)
-                self.Drawings.Name.Text = self.Player.Name
-                self.Drawings.Name.Visible = Esp.Settings.Name
-                self.Drawings.Name.Color = Esp.Settings.NameColor
+        local Character = self.Player.Character
+        if Character and Character:FindFirstChild("HumanoidRootPart") then
+            local RootPart = Character.HumanoidRootPart
+            local Camera = workspace.CurrentCamera
+            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+            
+            if ESP.Settings.Enabled and OnScreen then
+                self.Drawings.Box.Visible = ESP.Settings.Box
+                self.Drawings.Box.Position = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                self.Drawings.Box.Color = ESP.Settings.UseTeamColor and ESP.Settings.TeamColor or ESP.Settings.BoxColor
             else
                 self.Drawings.Box.Visible = false
-                self.Drawings.Name.Visible = false
             end
+        else
+            self.Drawings.Box.Visible = false
         end
     end)
 end
 
-return Esp
+return ESP
