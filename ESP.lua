@@ -451,9 +451,10 @@ do -- // Visuals
                     SetRenderProperty(Self.Renders.BoxOutline, "Filled", false)
                     SetRenderProperty(Self.Renders.BoxOutline, "Visible", false)
                     -- Fill
-                    SetRenderProperty(Self.Renders.BoxFill, "Filled", true)
-                    SetRenderProperty(Self.Renders.BoxFill, "Visible", false)
-                end
+                    SetRenderProperty(Self.Renders.BoxFill, "Filled", ESP.Main.Box.BoxFilled) -- Динамическое значение
+                    SetRenderProperty(Self.Renders.BoxFill, "Visible", false) -- Видимостью управляем отдельно
+                  end
+               end
                 --
                 do -- Renders.HealthBar
                     -- Inline
