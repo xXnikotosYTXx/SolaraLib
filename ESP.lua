@@ -1,47 +1,49 @@
-local ESP = {
-    Settings = {
-        Enabled = false,
-        LimitDistance = false,
-        MaxDistance = 9e9,
-        CheckTeam = false,
-        UseTeamColor = false,
-        TeamColor = Color3.fromRGB(255, 255, 255),
-        ShowDistance = true,
-        Box = true,
-        BoxColor = Color3.fromRGB(255, 255, 255),
-        HealthBar = true,
-        Name = true,
-        NameColor = Color3.fromRGB(255, 255, 255),
-        Misc = true,
-        MiscColor = Color3.fromRGB(255, 255, 255),
-        HealthText = true,
-        HealthTextColor = Color3.fromRGB(0, 255, 0),
-        TextFont = 3,
-        TextSize = 13
-    },
-    Cache = {}
+local EspModule = {}
+EspModule.__index = EspModule
+
+EspModule.Settings = {
+    Enabled = false,
+    LimitDistance = false,
+    MaxDistance = 9e9,
+    CheckTeam = false,
+    UseTeamColor = false,
+
+    TeamColor = Color3.fromRGB(255, 255, 255), -- Added TeamColor setting
+    ShowDistance = true,
+    Box = true,
+    BoxColor = Color3.fromRGB(255, 255, 255),
+    HealthBar = true,
+    Name = true,
+    NameColor = Color3.fromRGB(255, 255, 255),
+    Misc = true,
+    MiscColor = Color3.fromRGB(255, 255, 255),
+    HealthText = true,
+    HealthTextColor = Color3.fromRGB(0, 255, 0),
+    TextFont = 3,
+    TextSize = 13
 }
 
-ESP.__index = ESP
+EspModule.Groups = {}
+EspModule.Cache = {}
 
-function Esp.New(Player)
+function EspModule.New(Player)
     local self = setmetatable({
         Player = Player,
         Drawings = {},
         Misc = "",
         Connection = nil
-    }, Esp)
+    }, EspModule)
 
     self:Construct()
     self:Render()
 
-    self.Index = #Esp.Cache + 1
-    Esp.Cache[self.Index] = self
+    self.Index = #EspModule.Cache + 1
+    EspModule.Cache[self.Index] = self
 
     return self
 end
 
-function Esp:_Create(Type, Properties)
+function EspModule:_Create(Type, Properties)
     local drawing = Drawing.new(Type)
 
     for Property, Value in next, Properties do
@@ -51,16 +53,16 @@ function Esp:_Create(Type, Properties)
     return drawing
 end
 
-function Esp:Remove()
+function EspModule:Remove()
     for _, drawing in next, self.Drawings do
         drawing:Remove()
     end
 
-    table.remove(Esp.Cache, self.Index)
+    table.remove(EspModule.Cache, self.Index)
     self.Connection:Disconnect()
 end
 
-function Esp:Construct()
+function EspModule:Construct()
     self.Drawings.Box = self:_Create("Square", {
         Visible = false,
         Filled = false,
@@ -97,8 +99,8 @@ function Esp:Construct()
         Visible = false,
         Outline = true,
         Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
+        Size = EspModule.Settings.TextSize,
+        Font = EspModule.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
@@ -108,8 +110,8 @@ function Esp:Construct()
         Outline = true,
         Text = "Empty",
         Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
+        Size = EspModule.Settings.TextSize,
+        Font = EspModule.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
@@ -120,13 +122,13 @@ function Esp:Construct()
         Text = "",
         Color = Color3.new(1, 1, 1),
         Size = 10,
-        Font = Esp.Settings.TextFont,
+        Font = EspModule.Settings.TextFont,
         Center = true,
         ZIndex = 3
     })
 end
 
-function Esp:Render()
+function EspModule:Render()
     self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
         if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
             local CurrentCamera = workspace.CurrentCamera
@@ -145,14 +147,14 @@ function Esp:Render()
 
             local Distance = math.round((CurrentCamera.CFrame.Position - HumanoidRootPart.Position).Magnitude)
 
-            local Visible = Esp.Settings.Enabled and RootVisible and HeadVisible and LegVisible
+            local Visible = EspModule.Settings.Enabled and RootVisible and HeadVisible and LegVisible
 
-            if Esp.Settings.CheckTeam then
+            if EspModule.Settings.CheckTeam then
                 Visible = Visible and (self.Player.Team ~= game.Players.LocalPlayer.Team)
             end
 
-            if Esp.Settings.LimitDistance then
-                Visible = Visible and (Distance <= Esp.Settings.MaxDistance)
+            if EspModule.Settings.LimitDistance then
+                Visible = Visible and (Distance <= EspModule.Settings.MaxDistance)
             end
 
             local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
@@ -160,7 +162,7 @@ function Esp:Render()
             if Visible then
                 self.Drawings.Box.Size = Vector2.new(Width, Height)
                 self.Drawings.Box.Position = Vector2.new(RootVector.X - (Width / 2), RootVector.Y - (Height / 2))
-                self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor -- Use TeamColor if enabled
+                self.Drawings.Box.Color = EspModule.Settings.UseTeamColor and EspModule.Settings.TeamColor or EspModule.Settings.BoxColor -- Use TeamColor if enabled
 
                 self.Drawings.BoxOutline.Size = Vector2.new(Width - 2, Height - 2)
                 self.Drawings.BoxOutline.Position = Vector2.new((RootVector.X - (Width / 2)) + 1, (RootVector.Y - (Height / 2)) + 1)
@@ -172,31 +174,31 @@ function Esp:Render()
                 self.Drawings.HealthBar.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 7, self.Drawings.Box.Position.Y)
                 self.Drawings.HealthBar.Color = Color3.new(1 - HealthDecimal, HealthDecimal, 0)
 
-                self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (Esp.Settings.TextSize + 5))
-                self.Drawings.Name.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.NameColor
-                self.Drawings.Name.Text = (Esp.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
-                self.Drawings.Name.Font = Esp.Settings.TextFont
-                self.Drawings.Name.Size = Esp.Settings.TextSize
+                self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (EspModule.Settings.TextSize + 5))
+                self.Drawings.Name.Color = EspModule.Settings.UseTeamColor and EspModule.Settings.TeamColor or EspModule.Settings.NameColor
+                self.Drawings.Name.Text = (EspModule.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
+                self.Drawings.Name.Font = EspModule.Settings.TextFont
+                self.Drawings.Name.Size = EspModule.Settings.TextSize
 
                 self.Drawings.Misc.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), self.Drawings.Box.Position.Y + 2)
-                self.Drawings.Misc.Color = Esp.Settings.MiscColor
-                self.Drawings.Misc.Font = Esp.Settings.TextFont
-                self.Drawings.Misc.Size = Esp.Settings.TextSize
+                self.Drawings.Misc.Color = EspModule.Settings.MiscColor
+                self.Drawings.Misc.Font = EspModule.Settings.TextFont
+                self.Drawings.Misc.Size = EspModule.Settings.TextSize
                 self.Drawings.Misc.Text = self.Misc
 
                 self.Drawings.HealthText.Position = self.Drawings.HealthBarBackground.Position + Vector2.new(-15, self.Drawings.HealthBarBackground.Size.Y - (self.Drawings.HealthBarBackground.Size.Y - self.Drawings.HealthBar.Size.Y) - 5)
-                self.Drawings.HealthText.Color = Esp.Settings.HealthTextColor
-                self.Drawings.HealthText.Font = Esp.Settings.TextFont
+                self.Drawings.HealthText.Color = EspModule.Settings.HealthTextColor
+                self.Drawings.HealthText.Font = EspModule.Settings.TextFont
                 self.Drawings.HealthText.Text = math.round(HealthDecimal * 100) .. "%"
             end
 
-            self.Drawings.Box.Visible = Visible and Esp.Settings.Box
-            self.Drawings.BoxOutline.Visible = Visible and Esp.Settings.Box
-            self.Drawings.HealthBarBackground.Visible = Visible and Esp.Settings.HealthBar
-            self.Drawings.HealthBar.Visible = Visible and Esp.Settings.HealthBar
-            self.Drawings.Name.Visible = Visible and Esp.Settings.Name
-            self.Drawings.Misc.Visible = Visible and Esp.Settings.Misc
-            self.Drawings.HealthText.Visible = Visible and Esp.Settings.HealthText and HealthDecimal ~= 1
+            self.Drawings.Box.Visible = Visible and EspModule.Settings.Box
+            self.Drawings.BoxOutline.Visible = Visible and EspModule.Settings.Box
+            self.Drawings.HealthBarBackground.Visible = Visible and EspModule.Settings.HealthBar
+            self.Drawings.HealthBar.Visible = Visible and EspModule.Settings.HealthBar
+            self.Drawings.Name.Visible = Visible and EspModule.Settings.Name
+            self.Drawings.Misc.Visible = Visible and EspModule.Settings.Misc
+            self.Drawings.HealthText.Visible = Visible and EspModule.Settings.HealthText and HealthDecimal ~= 1
         else
             self.Drawings.Box.Visible = false
             self.Drawings.BoxOutline.Visible = false
@@ -208,3 +210,5 @@ function Esp:Render()
         end
     end)
 end
+
+return EspModule
