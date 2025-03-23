@@ -1,5 +1,6 @@
--- ESPModule.lua
+-- ESP Module Using getgenv() and Local Variables
 
+-- Local variables for internal use
 local Esp = {
     Settings = {
         Enabled = false,
@@ -7,7 +8,8 @@ local Esp = {
         MaxDistance = 9e9,
         CheckTeam = false,
         UseTeamColor = false,
-        TeamColor = Color3.fromRGB(255, 255, 255), -- Добавлен параметр TeamColor
+        
+        TeamColor = Color3.fromRGB(255, 255, 255),
         ShowDistance = true,
         Box = true,
         BoxColor = Color3.fromRGB(255, 255, 255),
@@ -27,7 +29,10 @@ local Esp = {
 
 Esp.__index = Esp
 
--- Создание нового ESP для игрока
+-- Exposing the Esp module globally using getgenv()
+getgenv().Esp = Esp
+
+-- Function to create a new ESP for a player
 function Esp.New(Player)
     local self = setmetatable({
         Player = Player,
@@ -45,7 +50,7 @@ function Esp.New(Player)
     return self
 end
 
--- Функция для создания объектов рисования
+-- Function to create a drawing element
 function Esp:_Create(Type, Properties)
     local drawing = Drawing.new(Type)
 
@@ -56,7 +61,7 @@ function Esp:_Create(Type, Properties)
     return drawing
 end
 
--- Удаление ESP
+-- Function to remove ESP elements
 function Esp:Remove()
     for _, drawing in next, self.Drawings do
         drawing:Remove()
@@ -66,7 +71,7 @@ function Esp:Remove()
     self.Connection:Disconnect()
 end
 
--- Конструирование объектов ESP
+-- Function to construct the necessary drawing elements
 function Esp:Construct()
     self.Drawings.Box = self:_Create("Square", {
         Visible = false,
@@ -133,14 +138,13 @@ function Esp:Construct()
     })
 end
 
--- Функция для рендера объектов ESP
+-- Function to render the ESP on screen
 function Esp:Render()
     self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
         if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
             local CurrentCamera = workspace.CurrentCamera
             local HumanoidRootPart = self.Player.Character.HumanoidRootPart
             local Humanoid = self.Player.Character.Humanoid
-
             local Offset = Vector3.new(0, 3, 0)
 
             local RootVector, RootVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
@@ -215,5 +219,3 @@ function Esp:Render()
         end
     end)
 end
-
-return Esp
