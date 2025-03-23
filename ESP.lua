@@ -9,6 +9,7 @@ getgenv().ESP = {
             Enabled = true,
             BoxColor = Color3.fromRGB(75, 175, 175),
             BoxFillColor = Color3.fromRGB(100, 75, 175),
+            BoxFillEnabled = true, -- Новая опция
         },
         HealthBar = {
             Enabled = true,
@@ -657,7 +658,7 @@ do -- // Visuals
                                         -- Fill
                                         SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
                                         SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
-                                        SetRenderProperty(Renders.BoxFill, "Visible", true)
+                                        SetRenderProperty(Renders.BoxFill, "Visible", ESP.Main.Box.BoxFillEnabled)
                                         SetRenderProperty(Renders.BoxFill, "Color", BoxColor2)
                                         SetRenderProperty(Renders.BoxFill, "Transparency", BoxTransparency2)
                                     else
