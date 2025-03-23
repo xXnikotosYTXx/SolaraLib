@@ -9,7 +9,7 @@ getgenv().ESP = {
             Enabled = true,
             BoxColor = Color3.fromRGB(75, 175, 175),
             BoxFillColor = Color3.fromRGB(100, 75, 175),
-            BoxFillEnabled = false, -- Новая опция
+            BoxFillEnabled = true, -- Новая опция
         },
         HealthBar = {
             Enabled = true,
