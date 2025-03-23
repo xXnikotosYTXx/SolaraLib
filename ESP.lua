@@ -1,4 +1,5 @@
--- Модуль сохранен в оригинальном виде с исправлением ошибок доступа
+-- ESPModule.lua
+
 local Esp = {
     Settings = {
         Enabled = false,
@@ -6,7 +7,7 @@ local Esp = {
         MaxDistance = 9e9,
         CheckTeam = false,
         UseTeamColor = false,
-        TeamColor = Color3.fromRGB(255, 255, 255),
+        TeamColor = Color3.fromRGB(255, 255, 255), -- Добавлен параметр TeamColor
         ShowDistance = true,
         Box = true,
         BoxColor = Color3.fromRGB(255, 255, 255),
@@ -26,29 +27,7 @@ local Esp = {
 
 Esp.__index = Esp
 
--- Автоматическая инициализация игроков
-local Players = game:GetService("Players")
-
-local function TrackPlayer(player)
-    if player ~= Players.LocalPlayer then
-        Esp.New(player)
-    end
-end
-
-Players.PlayerAdded:Connect(TrackPlayer)
-Players.PlayerRemoving:Connect(function(player)
-    for i = #Esp.Cache, 1, -1 do
-        if Esp.Cache[i].Player == player then
-            Esp.Cache[i]:Remove()
-        end
-    end
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    TrackPlayer(player)
-end
-
--- Оригинальные методы без изменений
+-- Создание нового ESP для игрока
 function Esp.New(Player)
     local self = setmetatable({
         Player = Player,
@@ -66,6 +45,28 @@ function Esp.New(Player)
     return self
 end
 
+-- Функция для создания объектов рисования
+function Esp:_Create(Type, Properties)
+    local drawing = Drawing.new(Type)
+
+    for Property, Value in next, Properties do
+        drawing[Property] = Value
+    end
+
+    return drawing
+end
+
+-- Удаление ESP
+function Esp:Remove()
+    for _, drawing in next, self.Drawings do
+        drawing:Remove()
+    end
+
+    table.remove(Esp.Cache, self.Index)
+    self.Connection:Disconnect()
+end
+
+-- Конструирование объектов ESP
 function Esp:Construct()
     self.Drawings.Box = self:_Create("Square", {
         Visible = false,
@@ -132,11 +133,11 @@ function Esp:Construct()
     })
 end
 
+-- Функция для рендера объектов ESP
 function Esp:Render()
     self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
         if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
             local CurrentCamera = workspace.CurrentCamera
-
             local HumanoidRootPart = self.Player.Character.HumanoidRootPart
             local Humanoid = self.Player.Character.Humanoid
 
@@ -166,7 +167,7 @@ function Esp:Render()
             if Visible then
                 self.Drawings.Box.Size = Vector2.new(Width, Height)
                 self.Drawings.Box.Position = Vector2.new(RootVector.X - (Width / 2), RootVector.Y - (Height / 2))
-                self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor -- Use TeamColor if enabled
+                self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor
 
                 self.Drawings.BoxOutline.Size = Vector2.new(Width - 2, Height - 2)
                 self.Drawings.BoxOutline.Position = Vector2.new((RootVector.X - (Width / 2)) + 1, (RootVector.Y - (Height / 2)) + 1)
@@ -214,4 +215,5 @@ function Esp:Render()
         end
     end)
 end
+
 return Esp
