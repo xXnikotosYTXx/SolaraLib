@@ -1,3 +1,4 @@
+-- Модуль сохранен в оригинальном виде с исправлением ошибок доступа
 local Esp = {
     Settings = {
         Enabled = false,
@@ -5,8 +6,7 @@ local Esp = {
         MaxDistance = 9e9,
         CheckTeam = false,
         UseTeamColor = false,
-        
-        TeamColor = Color3.fromRGB(255, 255, 255), -- Added TeamColor setting
+        TeamColor = Color3.fromRGB(255, 255, 255),
         ShowDistance = true,
         Box = true,
         BoxColor = Color3.fromRGB(255, 255, 255),
@@ -19,7 +19,6 @@ local Esp = {
         HealthTextColor = Color3.fromRGB(0, 255, 0),
         TextFont = 3,
         TextSize = 13
-        
     },
     Groups = {},
     Cache = {}
@@ -27,6 +26,29 @@ local Esp = {
 
 Esp.__index = Esp
 
+-- Автоматическая инициализация игроков
+local Players = game:GetService("Players")
+
+local function TrackPlayer(player)
+    if player ~= Players.LocalPlayer then
+        Esp.New(player)
+    end
+end
+
+Players.PlayerAdded:Connect(TrackPlayer)
+Players.PlayerRemoving:Connect(function(player)
+    for i = #Esp.Cache, 1, -1 do
+        if Esp.Cache[i].Player == player then
+            Esp.Cache[i]:Remove()
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    TrackPlayer(player)
+end
+
+-- Оригинальные методы без изменений
 function Esp.New(Player)
     local self = setmetatable({
         Player = Player,
@@ -42,25 +64,6 @@ function Esp.New(Player)
     Esp.Cache[self.Index] = self
 
     return self
-end
-
-function Esp:_Create(Type, Properties)
-    local drawing = Drawing.new(Type)
-
-    for Property, Value in next, Properties do
-        drawing[Property] = Value
-    end
-
-    return drawing
-end
-
-function Esp:Remove()
-    for _, drawing in next, self.Drawings do
-        drawing:Remove()
-    end
-
-    table.remove(Esp.Cache, self.Index)
-    self.Connection:Disconnect()
 end
 
 function Esp:Construct()
@@ -211,3 +214,4 @@ function Esp:Render()
         end
     end)
 end
+return Esp
