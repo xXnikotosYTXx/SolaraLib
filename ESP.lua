@@ -9,7 +9,6 @@ getgenv().ESP = {
             Enabled = true,
             BoxColor = Color3.fromRGB(75, 175, 175),
             BoxFillColor = Color3.fromRGB(100, 75, 175),
-            BoxFillEnabled = true, -- Новая опция
         },
         HealthBar = {
             Enabled = true,
@@ -656,7 +655,6 @@ do -- // Visuals
                                         SetRenderProperty(Renders.BoxOutline, "Visible", true)
                                         SetRenderProperty(Renders.BoxOutline, "Transparency", BoxTransparency1)
                                         -- Fill
-                                        -- Fill (двойная проверка)
                                         SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
                                         SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
                                         SetRenderProperty(Renders.BoxFill, "Visible", true)
@@ -666,8 +664,11 @@ do -- // Visuals
                                         SetRenderProperty(Renders.BoxInline, "Visible", false)
                                         SetRenderProperty(Renders.BoxOutline, "Visible", false)
                                         SetRenderProperty(Renders.BoxFill, "Visible", false)
-                                     end
-                                  end
+                                    end
+                                end
+                            end
+                        end
+                        --
                         do -- Chams
                             if ESP.Main.Chams then
                                 local ChamsFill, ChamsFillTransparency = Override or Flags[Selection .. "ChamsFill"]:Get().Color, (1 - ((1 - Flags[Selection .. "ChamsFill"]:Get().Transparency) * TransparencyMultplier))
