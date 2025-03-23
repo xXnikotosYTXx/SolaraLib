@@ -138,95 +138,84 @@ function Esp:Construct()
     })
 end
 
--- Function to render the ESP on screen with optimizations
+-- Function to render the ESP on screen
 function Esp:Render()
-    local lastUpdate = 0
-    local updateInterval = 1 / 30  -- Update every 30 frames
+    self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
+        if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
+            local CurrentCamera = workspace.CurrentCamera
+            local HumanoidRootPart = self.Player.Character.HumanoidRootPart
+            local Humanoid = self.Player.Character.Humanoid
+            local Offset = Vector3.new(0, 3, 0)
 
-    self.Connection = game:GetService("RunService").RenderStepped:Connect(function(_, dt)
-        lastUpdate = lastUpdate + dt
-        if lastUpdate >= updateInterval then
-            lastUpdate = 0
+            local RootVector, RootVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
+            local HeadVector, HeadVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position + Offset)
+            local LegVector, LegVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Offset)
 
-            if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
-                local CurrentCamera = workspace.CurrentCamera
-                local HumanoidRootPart = self.Player.Character.HumanoidRootPart
-                local Humanoid = self.Player.Character.Humanoid
-                local Offset = Vector3.new(0, 3, 0)
+            local Height = (HeadVector.Y - LegVector.Y) * 0.95
+            local Width = Height * 0.75
 
-                local RootVector, RootVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
-                local HeadVector, HeadVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position + Offset)
-                local LegVector, LegVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Offset)
+            local Distance = math.round((CurrentCamera.CFrame.Position - HumanoidRootPart.Position).Magnitude)
 
-                local Height = (HeadVector.Y - LegVector.Y) * 0.9  -- Adjust height slightly
-                local Width = math.max(Height * 0.75, 30)  -- Ensure minimum width for the box
+            local Visible = Esp.Settings.Enabled and RootVisible and HeadVisible and LegVisible
 
-                local Distance = math.round((CurrentCamera.CFrame.Position - HumanoidRootPart.Position).Magnitude)
-
-                local Visible = Esp.Settings.Enabled and RootVisible and HeadVisible and LegVisible
-
-                if Esp.Settings.CheckTeam then
-                    Visible = Visible and (self.Player.Team ~= game.Players.LocalPlayer.Team)
-                end
-
-                if Esp.Settings.LimitDistance then
-                    Visible = Visible and (Distance <= Esp.Settings.MaxDistance)
-                end
-
-                local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
-
-                if Visible then
-                    -- Box and health bar rendering
-                    self.Drawings.Box.Size = Vector2.new(Width, Height)
-                    self.Drawings.Box.Position = Vector2.new(RootVector.X - (Width / 2), RootVector.Y - (Height / 2))
-                    self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor
-
-                    self.Drawings.BoxOutline.Size = Vector2.new(Width - 2, Height - 2)
-                    self.Drawings.BoxOutline.Position = Vector2.new((RootVector.X - (Width / 2)) + 1, (RootVector.Y - (Height / 2)) + 1)
-
-                    self.Drawings.HealthBarBackground.Size = Vector2.new(5, Height - 3)
-                    self.Drawings.HealthBarBackground.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 9, self.Drawings.Box.Position.Y + 1)
-
-                    self.Drawings.HealthBar.Size = Vector2.new(1, Height * HealthDecimal)
-                    self.Drawings.HealthBar.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 7, self.Drawings.Box.Position.Y)
-                    self.Drawings.HealthBar.Color = Color3.new(1 - HealthDecimal, HealthDecimal, 0)
-
-                    self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (Esp.Settings.TextSize + 5))
-                    self.Drawings.Name.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.NameColor
-                    self.Drawings.Name.Text = (Esp.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
-                    self.Drawings.Name.Font = Esp.Settings.TextFont
-                    self.Drawings.Name.Size = Esp.Settings.TextSize
-
-                    self.Drawings.Misc.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), self.Drawings.Box.Position.Y + 2)
-                    self.Drawings.Misc.Color = Esp.Settings.MiscColor
-                    self.Drawings.Misc.Font = Esp.Settings.TextFont
-                    self.Drawings.Misc.Size = Esp.Settings.TextSize
-                    self.Drawings.Misc.Text = self.Misc
-
-                    self.Drawings.HealthText.Position = self.Drawings.HealthBarBackground.Position + Vector2.new(-15, self.Drawings.HealthBarBackground.Size.Y - (self.Drawings.HealthBarBackground.Size.Y - self.Drawings.HealthBar.Size.Y) - 5)
-                    self.Drawings.HealthText.Color = Esp.Settings.HealthTextColor
-                    self.Drawings.HealthText.Font = Esp.Settings.TextFont
-                    self.Drawings.HealthText.Text = math.round(HealthDecimal * 100) .. "%"
-                end
-
-                -- Control visibility
-                self.Drawings.Box.Visible = Visible and Esp.Settings.Box
-                self.Drawings.BoxOutline.Visible = Visible and Esp.Settings.Box
-                self.Drawings.HealthBarBackground.Visible = Visible and Esp.Settings.HealthBar
-                self.Drawings.HealthBar.Visible = Visible and Esp.Settings.HealthBar
-                self.Drawings.Name.Visible = Visible and Esp.Settings.Name
-                self.Drawings.Misc.Visible = Visible and Esp.Settings.Misc
-                self.Drawings.HealthText.Visible = Visible and Esp.Settings.HealthText and HealthDecimal ~= 1
-            else
-                -- Hide all elements when the character is not found
-                self.Drawings.Box.Visible = false
-                self.Drawings.BoxOutline.Visible = false
-                self.Drawings.HealthBarBackground.Visible = false
-                self.Drawings.HealthBar.Visible = false
-                self.Drawings.Name.Visible = false
-                self.Drawings.Misc.Visible = false
-                self.Drawings.HealthText.Visible = false
+            if Esp.Settings.CheckTeam then
+                Visible = Visible and (self.Player.Team ~= game.Players.LocalPlayer.Team)
             end
+
+            if Esp.Settings.LimitDistance then
+                Visible = Visible and (Distance <= Esp.Settings.MaxDistance)
+            end
+
+            local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
+
+            if Visible then
+                self.Drawings.Box.Size = Vector2.new(Width, Height)
+                self.Drawings.Box.Position = Vector2.new(RootVector.X - (Width / 2), RootVector.Y - (Height / 2))
+                self.Drawings.Box.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.BoxColor
+
+                self.Drawings.BoxOutline.Size = Vector2.new(Width - 2, Height - 2)
+                self.Drawings.BoxOutline.Position = Vector2.new((RootVector.X - (Width / 2)) + 1, (RootVector.Y - (Height / 2)) + 1)
+
+                self.Drawings.HealthBarBackground.Size = Vector2.new(5, Height - 3)
+                self.Drawings.HealthBarBackground.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 9, self.Drawings.Box.Position.Y + 1)
+
+                self.Drawings.HealthBar.Size = Vector2.new(1, Height * HealthDecimal)
+                self.Drawings.HealthBar.Position = Vector2.new(self.Drawings.Box.Position.X + self.Drawings.Box.Size.X - 7, self.Drawings.Box.Position.Y)
+                self.Drawings.HealthBar.Color = Color3.new(1 - HealthDecimal, HealthDecimal, 0)
+
+                self.Drawings.Name.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), (self.Drawings.Box.Position.Y + self.Drawings.Box.Size.Y) - (Esp.Settings.TextSize + 5))
+                self.Drawings.Name.Color = Esp.Settings.UseTeamColor and Esp.Settings.TeamColor or Esp.Settings.NameColor
+                self.Drawings.Name.Text = (Esp.Settings.ShowDistance and string.format("%s [%s]", self.Player.Name, Distance)) or self.Player.Name
+                self.Drawings.Name.Font = Esp.Settings.TextFont
+                self.Drawings.Name.Size = Esp.Settings.TextSize
+
+                self.Drawings.Misc.Position = Vector2.new(self.Drawings.Box.Position.X + (self.Drawings.Box.Size.X / 2), self.Drawings.Box.Position.Y + 2)
+                self.Drawings.Misc.Color = Esp.Settings.MiscColor
+                self.Drawings.Misc.Font = Esp.Settings.TextFont
+                self.Drawings.Misc.Size = Esp.Settings.TextSize
+                self.Drawings.Misc.Text = self.Misc
+
+                self.Drawings.HealthText.Position = self.Drawings.HealthBarBackground.Position + Vector2.new(-15, self.Drawings.HealthBarBackground.Size.Y - (self.Drawings.HealthBarBackground.Size.Y - self.Drawings.HealthBar.Size.Y) - 5)
+                self.Drawings.HealthText.Color = Esp.Settings.HealthTextColor
+                self.Drawings.HealthText.Font = Esp.Settings.TextFont
+                self.Drawings.HealthText.Text = math.round(HealthDecimal * 100) .. "%"
+            end
+
+            self.Drawings.Box.Visible = Visible and Esp.Settings.Box
+            self.Drawings.BoxOutline.Visible = Visible and Esp.Settings.Box
+            self.Drawings.HealthBarBackground.Visible = Visible and Esp.Settings.HealthBar
+            self.Drawings.HealthBar.Visible = Visible and Esp.Settings.HealthBar
+            self.Drawings.Name.Visible = Visible and Esp.Settings.Name
+            self.Drawings.Misc.Visible = Visible and Esp.Settings.Misc
+            self.Drawings.HealthText.Visible = Visible and Esp.Settings.HealthText and HealthDecimal ~= 1
+        else
+            self.Drawings.Box.Visible = false
+            self.Drawings.BoxOutline.Visible = false
+            self.Drawings.HealthBarBackground.Visible = false
+            self.Drawings.HealthBar.Visible = false
+            self.Drawings.Name.Visible = false
+            self.Drawings.Misc.Visible = false
+            self.Drawings.HealthText.Visible = false
         end
     end)
 end
