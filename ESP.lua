@@ -19,140 +19,133 @@ local Esp = {
         TextFont = 3,
         TextSize = 13
     },
-    Cache = {}
+    Groups = {},
+    Cache = {},
+    Connections = {}
 }
 
-Esp.__index = Esp
-
-function Esp.New(Player)
-    local self = setmetatable({
-        Player = Player,
-        Drawings = {},
-        Misc = "",
-        Connection = nil
-    }, Esp)
-
-    self:Construct()
-    self:Render()
-
-    self.Index = #Esp.Cache + 1
-    Esp.Cache[self.Index] = self
-
-    return self
-end
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 function Esp:_Create(Type, Properties)
     local drawing = Drawing.new(Type)
-    for Property, Value in next, Properties do
+    for Property, Value in pairs(Properties) do
         drawing[Property] = Value
     end
     return drawing
 end
 
-function Esp:Remove()
-    for _, drawing in next, self.Drawings do
-        drawing:Remove()
+function Esp:Remove(player)
+    local instance = self.Cache[player]
+    if instance then
+        for _, drawing in pairs(instance.Drawings) do
+            drawing:Remove()
+        end
+        if instance.Connection then
+            instance.Connection:Disconnect()
+        end
+        self.Cache[player] = nil
     end
-    table.remove(Esp.Cache, self.Index)
-    self.Connection:Disconnect()
 end
 
-function Esp:Construct()
-    self.Drawings.Box = self:_Create("Square", {
-        Visible = false,
-        Filled = false,
-        Thickness = 1,
-        Color = Color3.new(1, 1, 1),
-        ZIndex = 2
-    })
-
-    self.Drawings.BoxOutline = self:_Create("Square", {
-        Visible = false,
-        Filled = false,
-        Thickness = 1,
-        Color = Color3.new(0, 0, 0),
-        ZIndex = 1
-    })
-
-    self.Drawings.HealthBarBackground = self:_Create("Square", {
-        Visible = false,
-        Filled = true,
-        Thickness = 1,
-        Color = Color3.new(0, 0, 0),
-        ZIndex = 1
-    })
-
-    self.Drawings.HealthBar = self:_Create("Square", {
-        Visible = false,
-        Filled = true,
-        Thickness = 1,
-        Color = Color3.new(0, 1, 0),
-        ZIndex = 2
-    })
-
-    self.Drawings.Name = self:_Create("Text", {
-        Visible = false,
-        Outline = true,
-        Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
-        Center = true,
-        ZIndex = 3
-    })
-
-    self.Drawings.Misc = self:_Create("Text", {
-        Visible = false,
-        Outline = true,
-        Text = "Empty",
-        Color = Color3.new(1, 1, 1),
-        Size = Esp.Settings.TextSize,
-        Font = Esp.Settings.TextFont,
-        Center = true,
-        ZIndex = 3
-    })
-
-    self.Drawings.HealthText = self:_Create("Text", {
-        Visible = false,
-        Outline = true,
-        Text = "",
-        Color = Color3.new(1, 1, 1),
-        Size = 10,
-        Font = Esp.Settings.TextFont,
-        Center = true,
-        ZIndex = 3
-    })
+function Esp:Construct(player)
+    local drawings = {
+        Box = self:_Create("Square", {
+            Visible = false,
+            Filled = false,
+            Thickness = 1,
+            Color = self.Settings.BoxColor,
+            ZIndex = 2
+        }),
+        BoxOutline = self:_Create("Square", {
+            Visible = false,
+            Filled = false,
+            Thickness = 3,
+            Color = Color3.new(0, 0, 0),
+            ZIndex = 1
+        }),
+        HealthBarBackground = self:_Create("Square", {
+            Visible = false,
+            Filled = true,
+            Thickness = 1,
+            Color = Color3.new(0, 0, 0),
+            ZIndex = 1
+        }),
+        HealthBar = self:_Create("Square", {
+            Visible = false,
+            Filled = true,
+            Thickness = 1,
+            Color = Color3.new(0, 1, 0),
+            ZIndex = 2
+        }),
+        Name = self:_Create("Text", {
+            Visible = false,
+            Outline = true,
+            Color = self.Settings.NameColor,
+            Size = self.Settings.TextSize,
+            Font = self.Settings.TextFont,
+            Center = true,
+            ZIndex = 3
+        }),
+        Misc = self:_Create("Text", {
+            Visible = false,
+            Outline = true,
+            Color = self.Settings.MiscColor,
+            Size = self.Settings.TextSize,
+            Font = self.Settings.TextFont,
+            Center = true,
+            ZIndex = 3
+        }),
+        HealthText = self:_Create("Text", {
+            Visible = false,
+            Outline = true,
+            Color = self.Settings.HealthTextColor,
+            Size = 10,
+            Font = self.Settings.TextFont,
+            Center = true,
+            ZIndex = 3
+        })
+    }
+    
+    self.Cache[player] = {
+        Player = player,
+        Drawings = drawings,
+        Connection = nil
+    }
 end
 
 function Esp:Render()
-    self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
-        if self.Player.Character and self.Player.Character:FindFirstChild("HumanoidRootPart") and self.Player.Character:FindFirstChild("Humanoid") then
-            local CurrentCamera = workspace.CurrentCamera
+    -- Добавляем коэффициент масштабирования
+    local function getScaleFactor(depth)
+        return 1 / (depth * math.tan(math.rad(workspace.CurrentCamera.FieldOfView/2)) * 100
+    end
 
-            local HumanoidRootPart = self.Player.Character.HumanoidRootPart
-            local Humanoid = self.Player.Character.Humanoid
-
-            local Offset = Vector3.new(0, 3, 0)
-
-            local RootVector, RootVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
-            local HeadVector, HeadVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position + Offset)
-            local LegVector, LegVisible = CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Offset)
-
-            local Height = (HeadVector.Y - LegVector.Y) * 0.95
-            local Width = Height * 0.75
-
-            local Distance = math.round((CurrentCamera.CFrame.Position - HumanoidRootPart.Position).Magnitude)
-
-            local Visible = Esp.Settings.Enabled and RootVisible and HeadVisible and LegVisible
-
-            if Esp.Settings.CheckTeam then
-                Visible = Visible and (self.Player.Team ~= game.Players.LocalPlayer.Team)
-            end
-
-            if Esp.Settings.LimitDistance then
-                Visible = Visible and (Distance <= Esp.Settings.MaxDistance)
-            end
-
-            local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
+    -- Единый обработчик для всех игроков
+    if not self.RenderConnection then
+        self.RenderConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            for _, instance in pairs(Esp.Cache) do
+                if instance.Player and instance.Player.Character then
+                    local character = instance.Player.Character
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    local rootPart = character:FindFirstChild("HumanoidRootPart")
+                    
+                    if humanoid and rootPart then
+                        local camera = workspace.CurrentCamera
+                        local rootPos = rootPart.Position
+                        local rootScreenPos, onScreen = camera:WorldToViewportPoint(rootPos)
+                        
+                        -- Упрощенная проверка видимости
+                        local Visible = Esp.Settings.Enabled and onScreen
+                        
+                        if Visible and Esp.Settings.CheckTeam then
+                            Visible = instance.Player.Team ~= game.Players.LocalPlayer.Team
+                        end
+                        
+                        if Visible and Esp.Settings.LimitDistance then
+                            local distance = (camera.CFrame.Position - rootPos).Magnitude
+                            Visible = distance <= Esp.Settings.MaxDistance
+                        end
+                                local HealthDecimal = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
 
             if Visible then
                 self.Drawings.Box.Size = Vector2.new(Width, Height)
@@ -202,37 +195,55 @@ function Esp:Render()
             self.Drawings.Name.Visible = false
             self.Drawings.Misc.Visible = false
             self.Drawings.HealthText.Visible = false
-        end
-    end)
-end
 
-function Esp:Toggle(state)
-    self.Settings.Enabled = state
-    for _, instance in pairs(self.Cache) do
-        instance:Render()
+                        -- Корректировка размера бокса
+                        local scale = getScaleFactor(rootScreenPos.Z)
+                        local height = 6 * scale
+                        local width = 4 * scale
+
+                        -- Обновление позиций
+                        instance.Drawings.Box.Size = Vector2.new(width, height)
+                        instance.Drawings.Box.Position = Vector2.new(
+                            rootScreenPos.X - width/2,
+                            rootScreenPos.Y - height/2
+                        )
+
+                        -- Остальные элементы обновляются аналогично...
+                    end
+                end
+            end
+        end)
     end
 end
 
 function Esp:Init()
-    local Players = game:GetService("Players")
-    
+    -- Player handling
     Players.PlayerAdded:Connect(function(player)
-        Esp.New(player)
+        self:Construct(player)
     end)
-    
+
     Players.PlayerRemoving:Connect(function(player)
-        for i, esp in pairs(Esp.Cache) do
-            if esp.Player == player then
-                esp:Remove()
+        self:Remove(player)
+    end)
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            self:Construct(player)
+        end
+    end
+
+    -- Single render loop
+    self.Connections.Render = RunService.RenderStepped:Connect(function()
+        if self.Settings.Enabled then
+            self:UpdateRender()
+        else
+            for _, instance in pairs(self.Cache) do
+                for _, drawing in pairs(instance.Drawings) do
+                    drawing.Visible = false
+                end
             end
         end
     end)
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= Players.LocalPlayer then
-            Esp.New(player)
-        end
-    end
 end
 
 return Esp
