@@ -656,20 +656,19 @@ do -- // Visuals
                                         SetRenderProperty(Renders.BoxOutline, "Visible", true)
                                         SetRenderProperty(Renders.BoxOutline, "Transparency", BoxTransparency1)
                                         -- Fill
+                                        -- Fill (двойная проверка)
+                                        local BoxFillVisible = ESP.Main.Box.BoxFillEnabled -- Добавляем проверку
                                         SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
                                         SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
-                                        SetRenderProperty(Renders.BoxFill, "Visible", ESP.Main.Box.BoxFillEnabled)
+                                        SetRenderProperty(Renders.BoxFill, "Visible", BoxFillVisible) -- Используем флаг
                                         SetRenderProperty(Renders.BoxFill, "Color", BoxColor2)
-                                        SetRenderProperty(Renders.BoxFill, "Transparency", BoxTransparency2)
+                                        SetRenderProperty(Renders.BoxFill, "Transparency", Transparency2)
                                     else
                                         SetRenderProperty(Renders.BoxInline, "Visible", false)
                                         SetRenderProperty(Renders.BoxOutline, "Visible", false)
                                         SetRenderProperty(Renders.BoxFill, "Visible", false)
-                                    end
-                                end
-                            end
-                        end
-                        --
+                                     end
+                                  end
                         do -- Chams
                             if ESP.Main.Chams then
                                 local ChamsFill, ChamsFillTransparency = Override or Flags[Selection .. "ChamsFill"]:Get().Color, (1 - ((1 - Flags[Selection .. "ChamsFill"]:Get().Transparency) * TransparencyMultplier))
