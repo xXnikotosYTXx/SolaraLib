@@ -452,7 +452,7 @@ do -- // Visuals
                     SetRenderProperty(Self.Renders.BoxOutline, "Visible", false)
                     -- Fill
                     SetRenderProperty(Self.Renders.BoxFill, "Filled", false)
-                    SetRenderProperty(Self.Renders.BoxFill, "Visible", true)
+                    SetRenderProperty(Self.Renders.BoxFill, "Visible", false)
                 end
                 --
                 do -- Renders.HealthBar
