@@ -73,7 +73,7 @@ LeftGroupBox:AddToggle('MyToggle', {
 -- Calls the passed function when the toggle is updated
 Toggles.MyToggle:OnChanged(function()
     -- here we get our toggle object & then get its value
-    print('MyToggle changed to:', RainToggles.MyToggle.Value)
+    print('MyToggle changed to:', Toggles.MyToggle.Value)
 end)
 
 -- This should print to the console: "My toggle state changed! New value: false"
@@ -171,9 +171,9 @@ LeftGroupBox:AddSlider('MySlider', {
 -- You index Options with the specified index, in this case it is 'MySlider'
 -- To get the value of the slider you do slider.Value
 
-local Number = RainOptions.MySlider.Value
-RainOptions.MySlider:OnChanged(function()
-    print('MySlider was changed! New value:', RainOptions.MySlider.Value)
+local Number = Options.MySlider.Value
+Options.MySlider:OnChanged(function()
+    print('MySlider was changed! New value:', Options.MySlider.Value)
 end)
 
 -- This should print to the console: "MySlider was changed! New value: 3"
@@ -198,7 +198,7 @@ LeftGroupBox:AddInput('MyTextbox', {
 })
 
 Options.MyTextbox:OnChanged(function()
-    print('Text updated. New text:', RainOptions.MyTextbox.Value)
+    print('Text updated. New text:', Options.MyTextbox.Value)
 end)
 
 -- Groupbox:AddDropdown
@@ -218,7 +218,7 @@ LeftGroupBox:AddDropdown('MyDropdown', {
 })
 
 Options.MyDropdown:OnChanged(function()
-    print('Dropdown got changed. New value:', RainOptions.MyDropdown.Value)
+    print('Dropdown got changed. New value:', Options.MyDropdown.Value)
 end)
 
 Options.MyDropdown:SetValue('This')
@@ -245,7 +245,7 @@ LeftGroupBox:AddDropdown('MyMultiDropdown', {
 Options.MyMultiDropdown:OnChanged(function()
     -- print('Dropdown got changed. New value:', )
     print('Multi dropdown got changed:')
-    for key, value in next, RainOptions.MyMultiDropdown.Value do
+    for key, value in next, Options.MyMultiDropdown.Value do
         print(key, value) -- should print something like This, true
     end
 end)
@@ -280,9 +280,9 @@ LeftGroupBox:AddLabel('Color'):AddColorPicker('ColorPicker', {
     end
 })
 
-RainOptions.ColorPicker:OnChanged(function()
-    print('Color changed!', RainOptions.ColorPicker.Value)
-    print('Transparency changed!', RainOptions.ColorPicker.Transparency)
+Options.ColorPicker:OnChanged(function()
+    print('Color changed!', Options.ColorPicker.Value)
+    print('Transparency changed!', Options.ColorPicker.Transparency)
 end)
 
 Options.ColorPicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
@@ -321,11 +321,11 @@ LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
 -- OnClick is only fired when you press the keybind and the mode is Toggle
 -- Otherwise, you will have to use Keybind:GetState()
 Options.KeyPicker:OnClick(function()
-    print('Keybind clicked!', RainOptions.KeyPicker:GetState())
+    print('Keybind clicked!', Options.KeyPicker:GetState())
 end)
 
 Options.KeyPicker:OnChanged(function()
-    print('Keybind changed!', RainOptions.KeyPicker.Value)
+    print('Keybind changed!', Options.KeyPicker.Value)
 end)
 
 task.spawn(function()
@@ -333,7 +333,7 @@ task.spawn(function()
         wait(1)
 
         -- example for checking if a keybind is being pressed
-        local state = RainOptions.KeyPicker:GetState()
+        local state = Options.KeyPicker:GetState()
         if state then
             print('KeyPicker is being held down')
         end
@@ -419,7 +419,7 @@ local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
 -- I set NoUI so it does not show up in the keybinds menu
 MenuGroup:AddButton('Unload', function() Library:Unload() end)
 
-Library.ToggleKeybind = RainOptions.MenuKeybind -- Allows you to have a custom keybind for the menu
+Library.ToggleKeybind = Options.MenuKeybind -- Allows you to have a custom keybind for the menu
 
 -- Addons:
 -- SaveManager (Allows you to have a configuration system)
