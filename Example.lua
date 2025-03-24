@@ -3,7 +3,7 @@
 
 local repo = "https://raw.githubusercontent.com/xXnikotosYTXx/SolaraLib/refs/heads/main/"
 
-local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local Library = loadstring(game:HttpGet(repo .. 'lelelqwl.lua'))()
 local ThemeManager = loadstring(game:HttpGet(repo .. 'Addons/ThemeManager.lua'))()
 local SaveManager = loadstring(game:HttpGet(repo .. 'Addons/SaveManager.lua'))()
 
