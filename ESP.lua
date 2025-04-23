@@ -3,6 +3,33 @@
 ]]
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/xXnikotosYTXx/SolaraLib/refs/heads/main/Library.lua'))()
 
+
+local ESP = Window:AddTab('ESP'),
+local espSettings = Tabs.ESP:AddLeftGroupbox('EspSettings')
+
+espSettings:AddToggle("esp Enable", {
+    Text = "enabling esp",
+    Default = true,
+    Callback = function(Value)
+        espLib.options.enabled = Value
+    end
+})
+
+espSettings:AddToggle("esp Enable", {
+    Text = "enabling esp",
+    Default = true,
+    Callback = function(Value)
+        espLib.options.boxes = Value
+    end
+})
+
+espSettings:AddToggle("esp Enable", {
+    Text = "enabling esp",
+    Default = true,
+    Callback = function(Value)
+        espLib.options.names = Value
+    end
+})
 -- main module
 local espLibrary = {
     instances = {},
