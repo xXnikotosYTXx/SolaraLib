@@ -1,3 +1,5 @@
+local Esplib = loadstring(game:HttpGet('https://raw.githubusercontent.com/xXnikotosYTXx/SolaraLib/refs/heads/main/ESP.lua'))()
+
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
