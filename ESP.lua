@@ -1,35 +1,111 @@
 --[[
     made by siper#9938 and mickey#5612
 ]]
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/xXnikotosYTXx/SolaraLib/refs/heads/main/Library.lua'))()
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/xXnikotosYTXx/JanLib/refs/heads/main/Library.lua'))()
 
+local esp = library:AddTab('ESP');
+local column1 = esp:AddColumn();
+local column2 = esp:AddColumn();
+local espSettings = column1:AddSection(getServerConstant('Esp Settings'));
+local espCustomisation = column2:AddSection(getServerConstant('Esp Customisation'));
+local proximityArrows = column1:AddSection(getServerConstant('Proximity Arrows'));
 
-local ESP = Window:AddTab('ESP'),
-local espSettings = Tabs.ESP:AddLeftGroupbox('EspSettings')
+espSettings:AddToggle({
+    text = 'Toggle Esp',
+    callback = updateEspState
+}):AddSlider({
+    text = 'Max Esp Distance',
+    value = 10000,
+    min = 50,
+    max = 10000,
+    callback = function(value)
+        if (value == 10000) then
+            value = math.huge;
+        end;
 
-espSettings:AddToggle("esp Enable", {
-    Text = "enabling esp",
-    Default = true,
-    Callback = function(Value)
-        espLib.options.enabled = Value
-    end
+        library.flags.maxEspDistance = value;
+    end,
+});
+
+espSettings:AddList({
+    text = 'Esp Font',
+    flag = 'Esp Font',
+    values = {'UI', 'System', 'Plex', 'Monospace'},
+    callback = function(font)
+        font = Drawing.Fonts[font];
+        for i, v in next, entityEspList do
+            v:SetFont(font);
+        end;
+    end,
+});
+
+espSettings:AddSlider({
+    text = 'Text Size',
+    textpos = 2,
+    max = 100,
+    min = 16,
+    callback = function(textSize)
+        for i, v in next, entityEspList do
+            v:SetTextSize(textSize);
+        end;
+    end;
+});
+
+espSettings:AddToggle({
+    text = 'Toggle Tracers',
+});
+
+proximityArrows:AddToggle({
+    text = 'Proximity Arrows',
+}):AddSlider({text = 'Arrows Size', flag = 'Proximity Arrows Size', min = 10, max = 25, value = 20, textpos = 2});
+
+proximityArrows:AddSlider({
+    text = 'Max Distance',
+    flag = 'Max Proximity Arrow Distance',
+    min = 0,
+    max = 2000,
+    value = 1000
+});
+
+espSettings:AddToggle({
+    text = 'Toggle Boxes',
+});
+
+-- espSettings:AddToggle({
+--     text = '2D Esp',
+--     flag = 'Two Dimensions E S P'
+-- });
+
+espSettings:AddToggle({
+    text = 'Show Health Bar'
+});
+
+espSettings:AddToggle({
+    text = 'Show Team',
+});
+
+espCustomisation:AddToggle({
+    text = 'Rainbow Enemy Color',
+    callback = toggleRainbowEsp('enemyColor')
+});
+
+espCustomisation:AddToggle({
+    text = 'Rainbow Ally Color',
+    callback = toggleRainbowEsp('allyColor')
+});
+
+espCustomisation:AddToggle({
+    text = 'Unlock Tracers',
+});
+
+espCustomisation:AddColor({
+    text = 'Ally Color',
 })
 
-espSettings:AddToggle("esp Enable", {
-    Text = "enabling esp",
-    Default = true,
-    Callback = function(Value)
-        espLib.options.boxes = Value
-    end
-})
+espCustomisation:AddColor({
+    text = 'Enemy Color',
+});
 
-espSettings:AddToggle("esp Enable", {
-    Text = "enabling esp",
-    Default = true,
-    Callback = function(Value)
-        espLib.options.names = Value
-    end
-})
 -- main module
 local espLibrary = {
     instances = {},
