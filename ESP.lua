@@ -64,9 +64,9 @@ local espLibrary = {
         tracerColor = Color3.new(255, 255, 255),
         tracerOrigin = "Bottom", -- Available [Mouse, Top, Bottom]
         chams = false,
-        chamsFillColor = Color3.new(255, 255, 255),
+        chamsFillColor = Color3.new(255, 0, 0),
         chamsFillTransparency = 0.5,
-        chamsOutlineColor = Color3.new(),
+        chamsOutlineColor = Color3.new(255, 255, 255),
         chamsOutlineTransparency = 0
     },
 };
